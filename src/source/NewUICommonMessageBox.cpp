@@ -262,8 +262,8 @@ void SEASON3B::CNewUIMessageBoxButton::Render()
 
         GetTextExtentPoint32(g_pRenderText->GetFontDC(), m_strText.c_str(), m_strText.size(), &Fontsize);
 
-        Fontsize.cx = Fontsize.cx / ((float)WindowWidth / 640);
-        Fontsize.cy = Fontsize.cy / ((float)WindowHeight / 480);
+        Fontsize.cx = Fontsize.cx / ((float)WindowWidth / REFERENCE_WIDTH);
+        Fontsize.cy = Fontsize.cy / ((float)WindowHeight / REFERENCE_HEIGHT);
 
         int x = m_x + ((m_width / 2) - (Fontsize.cx / 2));
         int y = m_y + ((m_height / 2) - (Fontsize.cy / 2));
@@ -1958,7 +1958,7 @@ bool  SEASON3B::CLuckyItemMsgBoxLayout::SetLayout()
 
 CALLBACK_RESULT SEASON3B::CLuckyItemMsgBoxLayout::OkBtnDown(class CNewUIMessageBoxBase* pOwner, const leaf::xstreambuf& xParam)
 {
-    SocketClient->ToGameServer()->SendChaosMachineMixRequest(g_pLuckyItemWnd->SetActAction(), 0);
+    SocketClient->ToGameServer()->SendChaosMachineMixRequest(static_cast<ChaosMachineMixType>(g_pLuckyItemWnd->SetActAction()), 0);
     PlayBuffer(SOUND_CLICK01);
     g_MessageBox->SendEvent(pOwner, MSGBOX_EVENT_DESTROY);
 
@@ -2009,7 +2009,9 @@ bool  SEASON3B::CMixCheckMsgBoxLayout::SetLayout()
 CALLBACK_RESULT SEASON3B::CMixCheckMsgBoxLayout::OkBtnDown(class CNewUIMessageBoxBase* pOwner, const leaf::xstreambuf& xParam)
 {
     g_pMixInventory->SetMixState(SEASON3B::CNewUIMixInventory::MIX_REQUESTED);
-    SocketClient->ToGameServer()->SendChaosMachineMixRequest(g_MixRecipeMgr.GetCurMixID(), g_MixRecipeMgr.GetMixSubType());
+    SocketClient->ToGameServer()->SendChaosMachineMixRequest(
+        static_cast<ChaosMachineMixType>(g_MixRecipeMgr.GetCurMixID()),
+        g_MixRecipeMgr.GetMixSubType());
 
     PlayBuffer(SOUND_CLICK01);
     g_MessageBox->SendEvent(pOwner, MSGBOX_EVENT_DESTROY);

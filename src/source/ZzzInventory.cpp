@@ -51,6 +51,7 @@
 #include "CharacterManager.h"
 #include "SkillManager.h"
 #include "NewUISystem.h"
+#include "Camera/CameraProjection.h"
 
 extern CUITextInputBox* g_pSingleTextInputBox;
 extern int g_iChatInputType;
@@ -123,8 +124,6 @@ int g_iKeyPadEnable = 0;
 WORD g_wStoragePassword = 0;
 short	g_nKeyPadMapping[10];
 wchar_t	g_lpszKeyPadInput[2][MAX_KEYPADINPUT + 1];
-
-BYTE g_byItemUseType = 0;
 
 static  const int DEFAULT_DEVILSQUARELEVEL[6][2] = { {15, 130}, { 131, 180}, { 181, 230}, {231, 280}, { 281, 330}, { 331, 99999} };
 static  const int DARKCLASS_DEVILSQUARELEVEL[6][2] = { {15, 110}, { 111, 160}, { 161, 210}, {211, 260}, { 261, 310}, { 311, 99999} };
@@ -226,7 +225,7 @@ int RenderTextList(int sx, int sy, int TextNum, int Tab, int iSort = RT3_SORT_CE
 
     if (Tab == 0)
     {
-        sx -= (TextWidth + Tab) * 640 / WindowWidth / 2;
+        sx -= (TextWidth + Tab) * REFERENCE_WIDTH / WindowWidth / 2;
     }
 
     for (int i = 0; i < TextNum; i++)
@@ -470,7 +469,7 @@ void RenderTipTextList(const int sx, const int sy, int TextNum, int Tab, int iSo
     DisableAlphaBlend();
 }
 
-void SendRequestUse(int Index, int Target)
+void SendRequestUse(int Index, int Target, bool addPoints)
 {
     if (!IsCanUseItem())
     {
@@ -483,7 +482,7 @@ void SendRequestUse(int Index, int Target)
     }
 
     EnableUse = 10;
-    SocketClient->ToGameServer()->SendConsumeItemRequest(Index, Target, g_byItemUseType);
+    SocketClient->ToGameServer()->SendConsumeItemRequest(Index, Target, addPoints ? FruitUsage::AddPoints : FruitUsage::RemovePoints);
     g_ConsoleDebug->Write(MCD_SEND, L"0x26 [SendRequestUse(%d)]", Index);
 }
 
@@ -521,7 +520,7 @@ bool SendRequestEquipmentItem(STORAGE_TYPE iSrcType, int iSrcIndex, ITEM* pItem,
         spareBits = (((BYTE)pItem->Jewel_Of_Harmony_Option) << 4) + ((BYTE)pItem->Jewel_Of_Harmony_OptionLevel);
     }
 
-    SocketClient->ToGameServer()->SendItemMoveRequestExtended((uint32_t)iSrcType, iSrcIndex, (uint32_t)iDstType, iDstIndex);
+    SocketClient->ToGameServer()->SendItemMoveRequestExtended(static_cast<ItemStorageKind>(iSrcType), iSrcIndex, static_cast<ItemStorageKind>(iDstType), iDstIndex);
 
     g_ConsoleDebug->Write(MCD_SEND, L"0x24 [SendRequestEquipmentItem(%d %d %d %d %d %d %d)]", iSrcIndex, iDstIndex, iSrcType, iDstType, (pItem->Type & 0x1FFF), (BYTE)(pItem->Level), (BYTE)(pItem->Durability));
 
@@ -2137,19 +2136,19 @@ void RenderItemInfo(int sx, int sy, ITEM* ip, bool Sell, int Inventype, bool bIt
     {
         static DebouncedAction debouncedPetInfoRequest([ip, Inventype]()
             {
-                BYTE PetType = PET_TYPE_DARK_SPIRIT;
+                PetType PetType = PetType::DarkRaven;
                 if (ip->Type == ITEM_DARK_HORSE_ITEM)
                 {
-                    PetType = PET_TYPE_DARK_HORSE;
+                    PetType = PetType::DarkHorse;
 
                     if ((g_pMyInventory->GetPointedItemIndex()) == EQUIPMENT_HELPER) 
                     {
-                        SocketClient->ToGameServer()->SendPetInfoRequest(PetType, Inventype, EQUIPMENT_HELPER);
+                        SocketClient->ToGameServer()->SendPetInfoRequest(PetType, static_cast<StorageType>(Inventype), EQUIPMENT_HELPER);
                     }
                 }
                 else if ((g_pMyInventory->GetPointedItemIndex()) == EQUIPMENT_WEAPON_LEFT) 
                 {
-                    SocketClient->ToGameServer()->SendPetInfoRequest(PetType, Inventype, EQUIPMENT_WEAPON_LEFT);
+                    SocketClient->ToGameServer()->SendPetInfoRequest(PetType, static_cast<StorageType>(Inventype), EQUIPMENT_WEAPON_LEFT);
                 }
             }, 1000); // 1-second intervals
 
@@ -5947,7 +5946,7 @@ void RenderRepairInfo(int sx, int sy, ITEM* ip, bool Sell)
 
     GetTextExtentPoint32(g_pRenderText->GetFontDC(), TextList[0], 1, &TextSize);
 
-    int Height = ((TextNum - SkipNum) * TextSize.cy + SkipNum * TextSize.cy / 2) * 480 / WindowHeight;
+    int Height = ((TextNum - SkipNum) * TextSize.cy + SkipNum * TextSize.cy / 2) * REFERENCE_HEIGHT / WindowHeight;
     if (sy - Height >= 0)
         sy -= Height;
     else
@@ -7529,7 +7528,7 @@ int GetScreenWidth()
         && g_pNewUISystem->IsVisible(SEASON3B::INTERFACE_INVENTORY_EXT)
         && g_pNewUISystem->IsVisible(SEASON3B::INTERFACE_MYSHOP_INVENTORY))
     {
-        iWidth = 640 - (190 * 3);
+        iWidth = REFERENCE_WIDTH - (190 * 3);
     }
     else if (g_pNewUISystem->IsVisible(SEASON3B::INTERFACE_INVENTORY)
         && (g_pNewUISystem->IsVisible(SEASON3B::INTERFACE_CHARACTER)
@@ -7545,24 +7544,24 @@ int GetScreenWidth()
             || g_pNewUISystem->IsVisible(SEASON3B::INTERFACE_LUCKYITEMWND)
             ))
     {
-        iWidth = 640 - (190 * 2);
+        iWidth = REFERENCE_WIDTH - (190 * 2);
     }
     else if (g_pNewUISystem->IsVisible(SEASON3B::INTERFACE_CHARACTER)
         && (g_pNewUISystem->IsVisible(SEASON3B::INTERFACE_MYQUEST)
             || g_pNewUISystem->IsVisible(SEASON3B::INTERFACE_QUEST_PROGRESS_ETC))
         )
     {
-        iWidth = 640 - (190 * 2);
+        iWidth = REFERENCE_WIDTH - (190 * 2);
     }
     else if (g_pNewUISystem->IsVisible(SEASON3B::INTERFACE_CHARACTER)
         && g_pNewUISystem->IsVisible(SEASON3B::INTERFACE_PET)
         )
     {
-        iWidth = 640 - (190 * 2);
+        iWidth = REFERENCE_WIDTH - (190 * 2);
     }
     else if (g_pNewUISystem->IsVisible(SEASON3B::INTERFACE_REFINERY))
     {
-        iWidth = 640 - (190 * 2);
+        iWidth = REFERENCE_WIDTH - (190 * 2);
     }
     else if (g_pNewUISystem->IsVisible(SEASON3B::INTERFACE_INVENTORY)
         || g_pNewUISystem->IsVisible(SEASON3B::INTERFACE_CHARACTER)
@@ -7593,11 +7592,11 @@ int GetScreenWidth()
         || g_pNewUISystem->IsVisible(SEASON3B::INTERFACE_MUHELPER)
         )
     {
-        iWidth = 640 - 190;
+        iWidth = REFERENCE_WIDTH - 190;
     }
     else
     {
-        iWidth = 640;
+        iWidth = REFERENCE_WIDTH;
     }
 
     return iWidth;
@@ -10506,7 +10505,7 @@ void RenderObjectScreen(int Type, int ItemLevel, int excellentFlags, int ancient
 
 #ifdef PBG_ADD_ITEMRESIZE
     int ScreenPos_X = 0, ScreenPos_Y = 0;
-    Projection(Position, &ScreenPos_X, &ScreenPos_Y);
+    CameraProjection::WorldToScreen(g_Camera, Position, &ScreenPos_X, &ScreenPos_Y);
 #endif //PBG_ADD_ITEMRESIZE
 
     o->Scale = Scale;
@@ -10887,7 +10886,7 @@ void RenderItem3D(float sx, float sy, float Width, float Height, int Type, int L
     }
 
     vec3_t Position;
-    CreateScreenVector((int)(sx), (int)(sy), Position, false);
+    CameraProjection::ScreenToWorldRay(g_Camera, (int)(sx), (int)(sy), Position, false);
     //RenderObjectScreen(Type+MODEL_ITEM,Level,Option1,Position,Success,PickUp);
     if (Type == ITEM_BOX_OF_LUCK && Level == 1)	// 성탄의별
     {
@@ -11293,7 +11292,7 @@ void InitPartyList()
 void MoveServerDivisionInventory()
 {
     if (!g_pUIManager->IsOpen(INTERFACE_SERVERDIVISION)) return;
-    int x = 640 - 190;
+    int x = REFERENCE_WIDTH - 190;
     int y = 0;
     int Width, Height;
 
@@ -11363,7 +11362,7 @@ void HideKeyPad(void)
 int CheckMouseOnKeyPad(void)
 {
     int Width, Height, WindowX, WindowY;
-    Width = 213; Height = 2 * 5 + 6 * 40; WindowX = (640 - Width) / 2; WindowY = 60 + 40;//60 220
+    Width = 213; Height = 2 * 5 + 6 * 40; WindowX = (REFERENCE_WIDTH - Width) / 2; WindowY = 60 + 40;//60 220
 
     int iButtonTop = 50;
 
@@ -11415,7 +11414,7 @@ void MovePersonalShop()
                 OkYesOrNo = -1;
             }
         }
-        g_ptPersonalShop.x = 640 - 190 * 2;
+        g_ptPersonalShop.x = REFERENCE_WIDTH - 190 * 2;
         g_ptPersonalShop.y = 0;
 
         int Width = 56, Height = 24;
@@ -11835,7 +11834,7 @@ void RenderGuildList(int StartX, int StartY)
     else
         mu_swprintf(Text, L"%ls (Score:%d)", GuildMark[Hero->GuildMarkIndex].GuildName, GuildTotalScore);
 
-    g_pRenderText->RenderText(StartX + 95 - 60, StartY + 12, Text, 120 * WindowWidth / 640, true, 3);
+    g_pRenderText->RenderText(StartX + 95 - 60, StartY + 12, Text, 120 * WindowWidth / REFERENCE_WIDTH, true, 3);
 
     g_pRenderText->SetBgColor(0);
     g_pRenderText->SetTextColor(230, 230, 230, 255);
@@ -11871,7 +11870,7 @@ void RenderServerDivision()
     glColor3f(1.f, 1.f, 1.f);
     EnableAlphaTest();
 
-    InventoryStartX = 640 - 190;
+    InventoryStartX = REFERENCE_WIDTH - 190;
     InventoryStartY = 0;
     Width = 213; Height = 40; x = (float)InventoryStartX; y = (float)InventoryStartY;
     RenderInventoryInterface((int)x, (int)y, 1);
