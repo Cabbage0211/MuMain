@@ -1,4 +1,4 @@
-#include "stdafx.h"
+﻿#include "stdafx.h"
 #include <memory>
 #include "UIManager.h"
 #include "Guild/GuildCache.h"
