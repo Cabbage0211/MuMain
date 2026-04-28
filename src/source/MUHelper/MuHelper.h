@@ -71,6 +71,7 @@ namespace MUHelper
 		ActionSkillType GetDrainLifeSkill();
 		bool HasAssignedBuffSkill();
 		bool IsSelfPositionSkill(ActionSkillType iSkill);
+		std::vector<std::wstring> SplitString(const std::wstring& s, const std::wstring& delimiter);
 
 	private:
 		ConfigData m_config;

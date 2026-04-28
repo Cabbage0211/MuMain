@@ -122,19 +122,34 @@ namespace MUHelper
 		netData.SetItem = gameData.bPickAncient ? 1 : 0;
 		netData.AddExtraItem = gameData.bPickExtraItems ? 1 : 0;
 
-		memset(netData.ExtraItems, 0, sizeof(netData.ExtraItems));
 		int iItemIndex = 0;
 		for (const auto& wsItem : gameData.aExtraItems)
 		{
-			if (iItemIndex >= 12)
+			if (iItemIndex >= 12) 
 			{
 				break;
 			}
 
-			size_t n = wcstombs(netData.ExtraItems[iItemIndex], wsItem.c_str(), 15);
-			if (n == (size_t)-1 || n == 15)
+			memset(netData.ExtraItems[iItemIndex], 0, 15);
+
+			std::wstring safeStr = wsItem;
+
+			while (true)
 			{
-				memset(netData.ExtraItems[iItemIndex], 0, 15);
+				int needBytes = WideCharToMultiByte(CP_UTF8, 0, safeStr.c_str(), -1, NULL, 0, NULL, NULL);
+
+				if (needBytes <= 15 && needBytes > 0)
+				{
+					WideCharToMultiByte(CP_UTF8, 0, safeStr.c_str(), -1, netData.ExtraItems[iItemIndex], 15, NULL, NULL);
+					break;
+				}
+
+				if (!safeStr.empty()) {
+					safeStr.pop_back();
+				}
+				else {
+					break; 
+				}
 			}
 			iItemIndex++;
 		}
@@ -143,7 +158,6 @@ namespace MUHelper
 	void ConfigDataSerDe::Deserialize(const PRECEIVE_MUHELPER_DATA& netData, ConfigData& gameData)
 	{
 		gameData.iHuntingRange = static_cast<int>(netData.HuntingRange);
-
 		gameData.iMaxSecondsAway = static_cast<int>(netData.DistanceMin);
 		gameData.bLongRangeCounterAttack = (bool)netData.LongDistanceAttack;
 		gameData.bReturnToOriginalPosition = (bool)netData.OriginalPosition;
@@ -208,15 +222,17 @@ namespace MUHelper
 		gameData.bPickAncient = (bool)netData.SetItem;
 		gameData.bPickExtraItems = (bool)netData.AddExtraItem;
 
+		gameData.aExtraItems.clear();
 		wchar_t wsExtraItemBuffer[15 + 1];
 		for (int i = 0; i < sizeof(netData.ExtraItems) / sizeof(netData.ExtraItems[0]); i++)
 		{
 			memset(wsExtraItemBuffer, 0, sizeof(wsExtraItemBuffer));
 
-			size_t n = std::mbstowcs(wsExtraItemBuffer, &netData.ExtraItems[i][0], 15);
-			if (n > 0 && n <= 15)
+			if (netData.ExtraItems[i][0] == '\0') continue;
+
+			if (MultiByteToWideChar(CP_UTF8, 0, &netData.ExtraItems[i][0], -1, wsExtraItemBuffer, 15) > 0)
 			{
-				wsExtraItemBuffer[n] = L'\0';
+				wsExtraItemBuffer[15] = L'\0';
 				if (wsExtraItemBuffer[0] != L'\0')
 				{
 					gameData.aExtraItems.insert(std::wstring(wsExtraItemBuffer));

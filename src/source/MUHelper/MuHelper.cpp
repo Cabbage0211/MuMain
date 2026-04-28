@@ -1136,10 +1136,28 @@ namespace MUHelper
         {
             std::wstring strDisplayName = GetItemDisplayName(pItem);
 
-            for (const auto& str : m_config.aExtraItems)
+            for (const auto& strConfigLine : m_config.aExtraItems)
             {
-                // Check if the search keyword is in the item's display name
-                if (strDisplayName.find(str) != std::wstring::npos)
+                // 1. 将配置行按空格拆分为多个关键字
+                std::vector<std::wstring> keywords = SplitString(strConfigLine, L" ");
+
+                if (keywords.empty()) continue;
+
+                bool bMatchAll = true;
+                for (const auto& key : keywords)
+                {
+                    if (key.empty()) continue; // 跳过连续空格产生的空字符串
+
+                    // 2. 核心逻辑：只要有一个关键字没找到，该行配置就不匹配
+                    if (strDisplayName.find(key) == std::wstring::npos)
+                    {
+                        bMatchAll = false;
+                        break;
+                    }
+                }
+
+                // 3. 如果所有关键字都出现在物品名中，则判定为需要拾取
+                if (bMatchAll)
                 {
                     return true;
                 }
@@ -1199,5 +1217,17 @@ namespace MUHelper
         }
 
         return iClosestItemId;
+    }
+
+    std::vector<std::wstring> CMuHelper::SplitString(const std::wstring& s, const std::wstring& delimiter) {
+        std::vector<std::wstring> tokens;
+        size_t last = 0;
+        size_t next = 0;
+        while ((next = s.find(delimiter, last)) != std::wstring::npos) {
+            if (next > last) tokens.push_back(s.substr(last, next - last));
+            last = next + delimiter.length();
+        }
+        if (last < s.length()) tokens.push_back(s.substr(last));
+        return tokens;
     }
 }
