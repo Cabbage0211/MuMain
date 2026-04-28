@@ -14,6 +14,8 @@
 #include "UIMng.h"
 #include "MapManager.h"
 #include "CharacterManager.h"
+
+#include "MUHelper/MuHelper.h"
 #ifdef KJH_ADD_INGAMESHOP_UI_SYSTEM
 #include "GameShop/InGameShopSystem.h"
 #endif // KJH_ADD_INGAMESHOP_UI_SYSTEM
@@ -344,6 +346,14 @@ bool SEASON3B::CNewUIHotKey::UpdateKeyEvent()
         PlayBuffer(SOUND_CLICK01);
         return false;
     }
+    // --- 新增：按 HOME 键切换 MUHelper 开启/停止状态 ---
+    else if (SEASON3B::IsPress(VK_HOME))
+    {
+        MUHelper::g_MuHelper.Toggle(); // 切换助手的运行状态
+        PlayBuffer(SOUND_CLICK01);    // 播放点击音效
+        return false;
+    }
+    // ----------------------------------------------
     return true;
 }
 
