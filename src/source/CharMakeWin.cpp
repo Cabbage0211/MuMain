@@ -377,8 +377,7 @@ void CCharMakeWin::RequestCreateCharacter()
         rUIMng.PopUpMsgWin(MESSAGE_SPECIAL_NAME);
     else
     {
-        const std::uint8_t classByte =
-            static_cast<std::uint8_t>((CharacterView.Class << 2) + CharacterView.Skin);
+        const auto classByte = static_cast<CharacterClassNumber>((CharacterView.Class << 2) + CharacterView.Skin);
         CurrentProtocolState = REQUEST_CREATE_CHARACTER;
         SocketClient->ToGameServer()->SendCreateCharacter(InputText[0], classByte);
         //SendRequestCreateCharacter(InputText[0], CharacterView.Class, CharacterView.Skin);
@@ -481,7 +480,7 @@ void CCharMakeWin::RenderCreateCharacter()
     Vector(1.0f, 1.0f, 1.0f, o->Light);
     Vector(10, -500.f, 48.f, Position);
     Vector(-90.f, 0.f, 0.f, Angle);
-    CameraFOV = 10.f;
+    g_Camera.FOV = 10.f;
     MoveCharacterCamera(CharacterView.Object.Position, Position, Angle);
 
     BeginOpengl(m_winBack.GetXPos() / g_fScreenRate_x, m_winBack.GetYPos() / g_fScreenRate_y, 410 / g_fScreenRate_x, 335 / g_fScreenRate_y);

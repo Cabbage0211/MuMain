@@ -124,7 +124,7 @@ CUIGuildInfo::CUIGuildInfo()
     m_bOpened = false;
     m_bRequestUnionList = FALSE;
     m_nCurrentTab = 1;
-    SetPosition(640 - 190, 0);
+    SetPosition(REFERENCE_WIDTH - 190, 0);
     SetSize(190, 380);
 
     ZeroMemory(m_szRivalGuildName, sizeof(char) * (MAX_GUILDNAME + 1));
@@ -442,7 +442,7 @@ void CUIGuildInfo::DoGuildUnionMouseAction()
                 }
                 else
                 {
-                    SocketClient->ToGameServer()->SendGuildRelationshipChangeRequest(0x01, 0x02, Hero->Key);
+                    SocketClient->ToGameServer()->SendGuildRelationshipChangeRequest(GuildRelationshipType::Alliance, GuildRequestType::Leave, Hero->Key);
                 }
             }
 

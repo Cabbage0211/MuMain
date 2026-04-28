@@ -11,6 +11,7 @@
 #include "Scenes/SceneCore.h"
 
 #include "DSPlaySound.h"
+#include "NewUISystem.h"
 
 #include "WSclient.h"
 #include "Utilities/Log/ErrorReport.h"
@@ -124,7 +125,7 @@ void CSysMenuWin::UpdateWhileActive(double dDeltaTick)
         g_ErrorReport.Write(L"> Menu - Join another server.");
         g_ErrorReport.WriteCurrentTime();
         LogOut = true;
-        SocketClient->ToGameServer()->SendLogOut(2);
+        SocketClient->ToGameServer()->SendLogOut(LogOutType::BackToServerSelection);
         g_ConsoleDebug->Write(MCD_SEND, L"0xF1 [SendRequestLogOut] 2");
 
         CUIMng& rUIMng = CUIMng::Instance();
@@ -135,18 +136,16 @@ void CSysMenuWin::UpdateWhileActive(double dDeltaTick)
     {
         CUIMng& rUIMng = CUIMng::Instance();
         rUIMng.HideWin(this);
-        rUIMng.ShowWin(&rUIMng.m_OptionWin);
+        g_pNewUISystem->Show(SEASON3B::INTERFACE_OPTION);
     }
     else if (m_aBtn[SMW_BTN_CLOSE].IsClick())
     {
-        CUIMng::Instance().SetSysMenuWinShow(false);
         CUIMng::Instance().HideWin(this);
     }
-    else if (CInput::Instance().IsKeyDown(VK_ESCAPE)
-        && !CUIMng::Instance().IsSysMenuWinShow())
+    else if (CInput::Instance().IsKeyDown(VK_ESCAPE))
     {
-        ::PlayBuffer(SOUND_CLICK01);
-        CUIMng::Instance().HideWin(this);
+        // ESC toggle is handled by CUIMng::Update()
+        // No action needed here — CUIMng already hid this window
     }
 }
 
