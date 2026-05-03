@@ -474,7 +474,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
     // sessions still get the toggle (ImGui captures keyboard messages while a
     // window has focus). Bit 30 of lParam = previous key state — skip
     // auto-repeat ticks so a held key only toggles once.
-    if (msg == WM_SYSKEYDOWN && wParam == VK_F10 && (lParam & (1 << 30)) == 0)
+    constexpr LPARAM PREVIOUS_KEY_STATE_MASK = 1 << 30;
+    if (msg == WM_SYSKEYDOWN && wParam == VK_F10 && (lParam & PREVIOUS_KEY_STATE_MASK) == 0)
     {
         CameraManager::Instance().ToggleZoomLock();
         return 0;

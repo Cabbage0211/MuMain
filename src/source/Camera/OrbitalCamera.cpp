@@ -513,10 +513,11 @@ void OrbitalCamera::HandleInput()
 
         if (!CameraManager::Instance().IsZoomLocked())
         {
-            // Match the Default-camera ladder step (100 distance/rung) so a
-            // wheel tick feels comparable across modes. MouseWheel is already
-            // normalized to ticks in Winmain, so multiplying by it preserves
-            // multi-tick scrolls.
+            // 150 units/tick is intentionally a touch faster than the
+            // Default-camera ladder step (100 distance/rung) so continuous
+            // orbital zoom doesn't feel sluggish over the wider radius
+            // range. MouseWheel is already normalized to ticks in Winmain,
+            // so multiplying by it preserves multi-tick scrolls.
             const float zoomSpeed = 150.0f;
             m_Radius -= wheel * zoomSpeed;
             m_Radius = std::clamp(m_Radius, MIN_RADIUS, MAX_RADIUS);

@@ -156,8 +156,7 @@ bool SEASON3B::CNewUIHelpWindow::Render()
         };
         for (int key : kCustomKeys)
         {
-            wcsncpy(TextList[iTextNum], GlobalText[key], 99);
-            TextList[iTextNum][99] = L'\0';
+            wcsncpy_s(TextList[iTextNum], GlobalText[key], 99);
             TextListColor[iTextNum] = TEXT_COLOR_WHITE;
             TextBold[iTextNum] = false;
             iTextNum++;
