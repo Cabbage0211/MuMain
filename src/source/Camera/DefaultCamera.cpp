@@ -743,11 +743,10 @@ void DefaultCamera::HandleWheelZoom()
     if (CameraManager::Instance().IsZoomLocked())
         return;
 
-    // Wheel up zooms in (lower distance / lower index).
-    if (wheel > 0)
-        --m_PlayerZoomLevel;
-    else
-        ++m_PlayerZoomLevel;
+    // Wheel up (positive ticks) zooms in -> lower index. MouseWheel is
+    // already normalized to ticks in Winmain (HIWORD / WHEEL_DELTA), so a
+    // fast scroll producing 2+ ticks per frame moves multiple ladder rungs.
+    m_PlayerZoomLevel -= wheel;
 
     if (m_PlayerZoomLevel < 0)
         m_PlayerZoomLevel = 0;
